@@ -76,7 +76,7 @@ print_error(const void* fin, const void* fout, zfp_type type, size_t n)
   erms = sqrt(erms / n);
   ermsn = erms / (fmax - fmin);
   psnr = 20 * log10((fmax - fmin) / (2 * erms));
-  fprintf(stderr, " rmse=%. nrmse=%.6f maxe=%.6f psnr=%.6f", erms, ermsn, emax, psnr);
+  fprintf(stderr, " rmse=%6f. nrmse=%.6f maxe=%.6f psnr=%.6f", erms, ermsn, emax, psnr);
 }
 
 static void
