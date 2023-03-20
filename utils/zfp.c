@@ -75,7 +75,7 @@ print_error(const void* fin, const void* fout, zfp_type type, size_t n)
   }
   erms = sqrt(erms / n);
   ermsn = erms / (fmax - fmin);
-  psnr = 20 * log10((fmax - fmin) / (2 * erms));
+  psnr = 20 * log10((fmax - fmin) / ( erms));
   fprintf(stderr, " rmse=%6f. nrmse=%.6f maxe=%.6f psnr=%.6f", erms, ermsn, emax, psnr);
 }
 
@@ -611,7 +611,7 @@ int main(int argc, char* argv[])
   if (!quiet) {
     const char* type_name[] = { "int32", "int64", "float", "double" };
     fprintf(stderr, "type=%s nx=%zu ny=%zu nz=%zu nw=%zu", type_name[type - zfp_type_int32], nx, ny, nz, nw);
-    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
+    fprintf(stderr, " raw=%lu zfp=%lu ratio=%.6f rate=%.6f", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
       print_error(fi, fo, type, count);
     fprintf(stderr, "\n");
