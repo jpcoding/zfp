@@ -50,7 +50,7 @@ The 7 major tasks to be accomplished are:
 
 /* compute and print reconstruction error */
 static void
-print_error(const void* fin, const void* fout, zfp_type type, size_t n)
+print_error(const void* fin, const void* fout, zfp_type type, size_t n, double bitrate)
 {
   const int32* i32i = (const int32*)fin;
   const int64* i64i = (const int64*)fin;
@@ -98,7 +98,9 @@ print_error(const void* fin, const void* fout, zfp_type type, size_t n)
   erms = sqrt(erms / n);
   ermsn = erms / (fmax - fmin);
   psnr = 20 * log10((fmax - fmin) / (2 * erms));
+  double PSNR = 20*log10(fmax-fmin)-10*log10(erms*erms);
   fprintf(stderr, " rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.2f", erms, ermsn, emax, psnr);
+  printf("\nbitrate-PSNR %f %f\n", bitrate, PSNR);
 }
 
 static void
@@ -642,7 +644,7 @@ int main(int argc, char* argv[])
     fprintf(stderr, "type=%s nx=%zu ny=%zu nz=%zu nw=%zu", type_name[type - zfp_type_int32], nx, ny, nz, nw);
     fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
-      print_error(fi, fo, type, count);
+      print_error(fi, fo, type, count, CHAR_BIT * (double)zfpsize / count);
     fprintf(stderr, "\n");
   }
 
