@@ -6,6 +6,14 @@
 #include <string.h>
 #include "zfp.h"
 #include "zfp/internal/zfp/macros.h"
+#include <sys/time.h>      /* For gettimeofday(), in microseconds */
+#include <time.h>          /* For time(), in seconds */
+
+struct timeval startTime;
+struct timeval endTime;  /* Start and end times */
+struct timeval costStart; /*only used for recording the cost*/
+double totalCost = 0;
+
 void cost_start()
 {
   totalCost = 0;
