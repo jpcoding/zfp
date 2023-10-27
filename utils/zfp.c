@@ -6,6 +6,20 @@
 #include <string.h>
 #include "zfp.h"
 #include "zfp/internal/zfp/macros.h"
+void cost_start()
+{
+  totalCost = 0;
+  gettimeofday(&costStart, NULL);
+}
+
+void cost_end()
+{
+  double elapsed;
+  struct timeval costEnd;
+  gettimeofday(&costEnd, NULL);
+  elapsed = ((costEnd.tv_sec*1000000+costEnd.tv_usec)-(costStart.tv_sec*1000000+costStart.tv_usec))/1000000.0;
+  totalCost += elapsed;
+}
 
 /*
 File I/O is done using the following combinations of i, o, s, and z:
@@ -497,6 +511,7 @@ int main(int argc, char* argv[])
   }
 
   /* compress input file if provided */
+  cost_start();
   if (inpath) {
     /* allocate buffer for compressed data */
     bufsize = zfp_stream_maximum_size(zfp, field);
@@ -526,10 +541,13 @@ int main(int argc, char* argv[])
 
     /* compress data */
     zfpsize = zfp_compress(zfp, field);
+    cost_end();
+    printf("compression time  = %f\n", totalCost);
     if (zfpsize == 0) {
       fprintf(stderr, "compression failed\n");
       return EXIT_FAILURE;
     }
+
 
     /* optionally write compressed data */
     if (zfppath) {
@@ -547,6 +565,7 @@ int main(int argc, char* argv[])
   }
 
   /* decompress data if necessary */
+   cost_start();
   if ((!inpath && zfppath) || outpath || stats) {
     /* obtain metadata from header when present */
     zfp_stream_rewind(zfp);
@@ -591,6 +610,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
       }
     }
+    cost_end();
+    printf("decompression time = %f\n", totalCost);
 
     /* optionally write reconstructed data */
     if (outpath) {
