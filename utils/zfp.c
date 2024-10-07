@@ -6,6 +6,28 @@
 #include <string.h>
 #include "zfp.h"
 #include "zfp/internal/zfp/macros.h"
+#include <sys/time.h>      /* For gettimeofday(), in microseconds */
+#include <time.h>          /* For time(), in seconds */
+
+struct timeval startTime;
+struct timeval endTime;  /* Start and end times */
+struct timeval costStart; /*only used for recording the cost*/
+double totalCost = 0;
+
+void cost_start()
+{
+  totalCost = 0;
+  gettimeofday(&costStart, NULL);
+}
+
+void cost_end()
+{
+  double elapsed;
+  struct timeval costEnd;
+  gettimeofday(&costEnd, NULL);
+  elapsed = ((costEnd.tv_sec*1000000+costEnd.tv_usec)-(costStart.tv_sec*1000000+costStart.tv_usec))/1000000.0;
+  totalCost += elapsed;
+}
 
 /*
 File I/O is done using the following combinations of i, o, s, and z:
@@ -28,7 +50,7 @@ The 7 major tasks to be accomplished are:
 
 /* compute and print reconstruction error */
 static void
-print_error(const void* fin, const void* fout, zfp_type type, size_t n)
+print_error(const void* fin, const void* fout, zfp_type type, size_t n, double bitrate)
 {
   const int32* i32i = fin;
   const int64* i64i = fin;
@@ -76,7 +98,9 @@ print_error(const void* fin, const void* fout, zfp_type type, size_t n)
   erms = sqrt(erms / n);
   ermsn = erms / (fmax - fmin);
   psnr = 20 * log10((fmax - fmin) / (2 * erms));
+  double PSNR = 20*log10(fmax-fmin)-10*log10(erms*erms);
   fprintf(stderr, " rmse=%.4g nrmse=%.4g maxe=%.4g psnr=%.2f", erms, ermsn, emax, psnr);
+  printf("\nbitrate-PSNR %f %f\n", bitrate, PSNR);
 }
 
 static void
@@ -497,6 +521,7 @@ int main(int argc, char* argv[])
   }
 
   /* compress input file if provided */
+  cost_start();
   if (inpath) {
     /* allocate buffer for compressed data */
     bufsize = zfp_stream_maximum_size(zfp, field);
@@ -526,10 +551,13 @@ int main(int argc, char* argv[])
 
     /* compress data */
     zfpsize = zfp_compress(zfp, field);
+    cost_end();
+    printf("compression time  = %f\n", totalCost);
     if (zfpsize == 0) {
       fprintf(stderr, "compression failed\n");
       return EXIT_FAILURE;
     }
+
 
     /* optionally write compressed data */
     if (zfppath) {
@@ -547,6 +575,7 @@ int main(int argc, char* argv[])
   }
 
   /* decompress data if necessary */
+   cost_start();
   if ((!inpath && zfppath) || outpath || stats) {
     /* obtain metadata from header when present */
     zfp_stream_rewind(zfp);
@@ -591,6 +620,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
       }
     }
+    cost_end();
+    printf("decompression time = %f\n", totalCost);
 
     /* optionally write reconstructed data */
     if (outpath) {
@@ -613,7 +644,7 @@ int main(int argc, char* argv[])
     fprintf(stderr, "type=%s nx=%zu ny=%zu nz=%zu nw=%zu", type_name[type - zfp_type_int32], nx, ny, nz, nw);
     fprintf(stderr, " raw=%lu zfp=%lu ratio=%.3g rate=%.4g", (unsigned long)rawsize, (unsigned long)zfpsize, (double)rawsize / zfpsize, CHAR_BIT * (double)zfpsize / count);
     if (stats)
-      print_error(fi, fo, type, count);
+      print_error(fi, fo, type, count, CHAR_BIT * (double)zfpsize / count);
     fprintf(stderr, "\n");
   }
 
