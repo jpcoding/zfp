@@ -340,6 +340,8 @@ in the same manner that :ref:`build targets <targets>` are specified, e.g.,
   Default: undefined/off.
 
 
+.. _word-size:
+
 .. c:macro:: BIT_STREAM_WORD_TYPE
 
   Unsigned integer type used for buffering bits.  Wider types tend to give

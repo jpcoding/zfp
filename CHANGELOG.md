@@ -3,6 +3,18 @@ Change Log
 
 ---
 
+## Unreleased
+
+### Added
+
+- A new code example, `chunk`, shows how to perform (de)compression in chunks.
+
+### Fixed
+
+- #241: Signed left shifts, integer overflow invoke undefined behavior.
+
+---
+
 ## 1.0.1 (2023-12-15)
 
 This patch release primarily addresses minor bug fixes and is needed to update
